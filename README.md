@@ -282,38 +282,6 @@ mcp_servers:
 | HTTP 客户端 | httpx | >= 0.27.0 |
 | MCP 协议 | mcp | >= 1.12.0 |
 
-## 文档体系
-
-本项目提供完整的学习路径，包含理论讲解、源码解析、实战演练三个层次：
-
-### 理论学习篇（理解"为什么"）
-- [什么是 Coding Agent？](files/理论学习：什么是%20Coding%20Agent？.md)
-- [ReAct 范式与 Agent Loop](files/理论学习：ReAct%20范式与%20Agent%20Loop.md)
-- [Function Calling 与工具系统](files/理论学习：Function%20Calling%20与工具系统.md)
-- [五层纵深权限防御](files/理论学习：五层纵深权限防御.md)
-- [上下文压缩与 Token 管理](files/理论学习：上下文压缩与%20Token%20管理.md)
-- [多 Agent 团队协作](files/理论学习：多%20Agent%20团队协作.md)
-- [System Prompt 设计](files/理论学习：System%20Prompt%20如何设计？.md)
-
-### 源码解析篇（理解"怎么做"）
-- [Agent 主循环与事件流](files/Python源码解析：Agent%20主循环与事件流.md)
-- [工具注册与执行框架](files/Python源码解析：工具注册与执行框架.md)
-- [五层权限防御链](files/Python源码解析：五层权限防御链.md)
-- [上下文压缩与溢写](files/Python源码解析：上下文压缩与溢写.md)
-- [多 Agent 团队协作](files/Python源码解析：多%20Agent%20团队协作.md)
-- [系统提示词组装管线](files/Python源码解析：系统提示词组装管线.md)
-
-### 实战演练篇（动手实践）
-- [动手实现 Agent Loop](files/实战演练：动手实现%20Agent%20Loop.md)
-- [动手实现工具系统](files/实战演练：动手实现工具系统.md)
-- [动手实现权限系统](files/实战演练：动手实现权限系统.md)
-- [动手实现上下文管理](files/实战演练：动手实现上下文管理.md)
-- [动手实现子 Agent](files/实战演练：动手实现子%20Agent.md)
-- [动手实现 Agent Teams](files/实战演练：动手实现%20Agent%20Teams.md)
-- [动手实现 Hook 系统](files/实战演练：动手实现%20Hook%20系统.md)
-- [动手实现 Skill 系统](files/实战演练：动手实现%20Skill%20系统.md)
-- [动手接入 MCP 服务](files/实战演练：动手接入MCP服务.md)
-
 ## 开发指南
 
 ### 代码规范
