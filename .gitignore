@@ -1,0 +1,20 @@
+# 敏感配置目录（包含 API key，绝对不能提交）
+.guolaicode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# 其他工具配置
+.claude/
+CLAUDE.md

@@ -1,0 +1,330 @@
+# GuoLaiCode - 终端 AI 编程助手
+
+一个功能丰富、架构清晰的终端 AI 编码助手，从零构建，深度学习 Agent 架构。
+
+## 特性
+
+### 智能 Agent 系统
+- **ReAct 范式实现**：Think -> Act -> Observe 循环，让 AI 自主思考和行动
+- **多轮对话管理**：完整的对话历史、上下文压缩、长期记忆
+- **流式响应**：实时看到 AI 的思考过程和工具调用
+
+### 强大的工具系统
+- **6 大内置工具**：ReadFile、WriteFile、EditFile、Bash、Glob、Grep
+- **Function Calling 协议**：标准化的工具调用接口
+- **MCP 集成**：支持 Model Context Protocol，接入外部工具生态
+- **技能系统**：可扩展的自定义技能包（Skill）
+
+### 多 Agent 协作
+- **子任务分发**：SubAgent 独立执行子任务，隔离上下文
+- **团队协作模式**：多 Agent 并行工作，共享任务列表和消息邮箱
+- **三种执行后端**：Tmux、iTerm2、In-process 自适应选择
+- **Git Worktree 隔离**：每个任务在独立分支中工作
+
+### 五层权限防御链
+
+```
+1. Plan Mode 例外      # 只读模式特殊处理
+2. 安全命令白名单     # ls/pwd/git status 自动放行
+3. 危险命令黑名单     # rm -rf / 直接拦截
+4. PathSandbox        # 路径访问控制
+5. 规则引擎           # 用户/项目/本地三层规则
+6. 权限模式           # default/accept-edits/plan/bypass
+7. HITL 人工确认      # 最终用户确认
+```
+
+### 智能上下文管理
+- **两层压缩策略**
+  - 第 1 层：大结果存磁盘（几乎零损失）
+  - 第 2 层：摘要旧消息 + 保留近期原文（中等损失）
+- **决策冻结机制**：保持 Prompt Cache 前缀稳定，降低 API 成本
+- **Token 预算管理**：单条 50K 字符限制，聚合 200K 字符上限
+
+## 快速开始
+
+### 环境要求
+
+- Python >= 3.11
+- 操作系统：Windows / macOS / Linux
+
+### 安装
+
+```bash
+# 克隆项目
+git clone https://github.com/your-repo/guolaicode.git
+cd guolaicode
+
+# 创建虚拟环境（推荐）
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# 或 venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -e .
+
+# 验证安装
+guolaicode --help
+```
+
+### 配置
+
+编辑 `~/.guolaicode/config.yaml`：
+
+```yaml
+providers:
+  - name: my-provider
+    protocol: openai-compat  # 或 anthropic / openai
+    base_url: https://your-api-endpoint/v1
+    api_key: "your-api-key"
+    model: "your-model-name"
+
+permission_mode: default  # default / accept-edits / plan / bypass
+```
+
+### 启动
+
+```bash
+# 启动交互式终端
+guolaicode
+```
+
+## 架构设计
+
+### 五层架构
+
+```
++-------------------------------------+
+|           交互层 (Interaction)       |
+|        Textual TUI / 命令行界面      |
++-------------------------------------+
+|          对话层 (Conversation)       |
+|   消息管理 / 上下文压缩 / 记忆系统   |
++-------------------------------------+
+|            引擎层 (Engine)           |
+|    Agent Loop / ReAct 循环 / 事件流 |
++-------------------------------------+
+|            工具层 (Tools)            |
+|   内置工具 / MCP 适配器 / 技能系统   |
++-------------------------------------+
+|            安全层 (Security)         |
+|   权限检查 / 路径沙箱 / 命令过滤     |
++-------------------------------------+
+```
+
+### 核心循环：Agent Loop
+
+```python
+async def run(self, conversation) -> AsyncIterator[AgentEvent]:
+    while True:
+        iteration += 1
+
+        # 1. turn_start hook
+        # 2. 消费通知队列
+        # 3. 自动上下文压缩
+        # 4. pre_send hook
+        # 5. 构建系统提示词
+        # 6. Plan Mode 注入
+        # 7. 获取工具 schema，调 LLM
+        # 8. 消费流式响应
+        # 9. max_tokens 恢复
+        # 10. 没有工具调用 -> 结束
+        # 11. 分批执行工具
+        # 12. 连续未知工具检查
+        # 13. turn_end hook
+```
+
+### 目录结构
+
+```
+guolaicode/
+├── agent.py              # Agent 核心逻辑与主循环
+├── app.py                # Textual TUI 应用入口
+├── client.py             # LLM 客户端适配
+├── config.py             # 配置管理
+├── conversation.py       # 对话管理与序列化
+│
+├── permissions/          # 权限系统
+│   ├── checker.py        # 权限检查器（5层防御链）
+│   ├── dangerous.py      # 危险命令检测
+│   ├── modes.py          # 权限模式矩阵
+│   ├── rules.py          # 规则引擎
+│   └── sandbox.py        # PathSandbox 路径检查
+│
+├── tools/                # 工具系统
+│   ├── base.py           # Tool 抽象基类
+│   ├── __init__.py       # ToolRegistry 注册中心
+│   ├── read_file.py      # 文件读取
+│   ├── write_file.py     # 文件写入
+│   ├── edit_file.py      # 文件编辑
+│   ├── bash.py           # 命令执行
+│   ├── glob.py           # 文件搜索
+│   └── grep.py           # 内容搜索
+│
+├── context/              # 上下文管理
+│   └── manager.py        # 两层压缩 + 决策冻结
+│
+├── teams/                # 多 Agent 团队
+│   ├── manager.py        # 团队生命周期管理
+│   ├── mailbox.py        # 异步消息通信
+│   ├── coordinator.py    # Lead 协调者模式
+│   ├── spawn_tmux.py     # Tmux 后端
+│   └── spawn_inprocess.py # 进程内后端
+│
+├── skills/               # 技能系统
+│   ├── loader.py         # Skill 加载器
+│   ├── executor.py       # 执行器（inline/fork）
+│   └── builtins/         # 内置技能
+│
+├── hooks/                # Hook 系统
+│   ├── engine.py         # Hook 引擎
+│   ├── conditions.py     # 条件匹配
+│   └── executors.py      # 执行器
+│
+├── mcp/                  # MCP 协议
+│   ├── client.py         # MCP 客户端
+│   ├── manager.py        # 服务器管理
+│   └── tool_wrapper.py   # 工具包装器
+│
+├── memory/               # 记忆系统
+│   ├── auto_memory.py    # 自动记忆提取
+│   ├── recall.py         # 记忆检索
+│   └── session.py        # 会话持久化
+│
+├── commands/             # 命令系统
+│   ├── registry.py       # 命令注册中心
+│   └── handlers/         # 命令处理器
+│
+└── worktree/             # Git 工作树
+    ├── manager.py        # Worktree 管理
+    └── session.py        # 会话隔离
+```
+
+## 核心模块详解
+
+### 1. Agent Loop 与 ReAct 范式
+- **文件**: `guolaicode/agent.py`
+- **原理**: 基于 ReAct（Reasoning + Acting）范式的自主循环
+- **特点**: async generator 事件流驱动、StreamCollector 解耦流消费逻辑、4 种停止条件
+
+### 2. 工具注册与执行框架
+- **目录**: `guolaicode/tools/`
+- **设计**: ABC 抽象基类 + Pydantic 参数校验、Schema 自动生成、Registry 注册中心
+
+### 3. 五层权限防御链
+- **目录**: `guolaicode/permissions/`
+- **层级**: Plan Mode 例外 -> 安全白名单 -> 危险黑名单 -> PathSandbox -> 规则引擎 -> HITL 确认
+
+### 4. 上下文压缩与溢写
+- **文件**: `guolaicode/context/manager.py`
+- **策略**: Layer 1 单条 >50KB 存盘 + Layer 2 Auto-Compact 摘要旧消息
+
+### 5. 多 Agent 团队协作
+- **目录**: `guolaicode/teams/`
+- **模式**: SubAgent 星型拓扑 + Agent Team 网状结构
+- **后端**: Tmux / iTerm2 / In-process 自动检测
+
+### 6. System Prompt 组装管线
+- **文件**: `guolaicode/prompts/system_prompt.py`
+- **结构**: 7 段固定段落 + 3 段条件段落 + Hook 注入
+
+### 7. MCP 协议集成
+- **目录**: `guolaicode/mcp/`
+- **支持**: stdio 和 streamable HTTP 两种传输模式
+
+### 8. 技能系统（Skill）
+- **目录**: `guolaicode/skills/`
+- **模式**: inline（直接执行）/ fork（子进程执行）
+
+## 配置说明
+
+### 配置文件位置
+- 全局配置：`~/.guolaicode/config.yaml`
+- 项目配置：`.guolaicode/config.yaml`（项目根目录）
+- 本地权限规则：`.guolaicode/permissions.local.yaml`
+
+### 完整配置示例
+
+```yaml
+providers:
+  - name: doubao
+    protocol: openai-compat
+    base_url: https://ark.cn-beijing.volces.com/api/coding/v3
+    api_key: "your-api-key"
+    model: Doubao-Seed-2.0-Code
+
+permission_mode: default
+
+mcp_servers:
+  - name: context7
+    command: npx
+    args: ["-y", "@upstash/context7-mcp"]
+```
+
+### 权限模式说明
+
+| 模式 | 读操作 | 写操作 | 命令执行 | 适用场景 |
+|------|--------|--------|----------|----------|
+| `default` | 自动放行 | 需确认 | 需确认 | 日常使用 |
+| `accept_edits` | 自动放行 | 自动放行 | 需确认 | 快速迭代 |
+| `plan` | 自动放行 | 需确认 | 需确认 | 计划模式 |
+| `bypass` | 自动放行 | 自动放行 | 自动放行 | 信任环境 |
+
+## 技术栈
+
+| 类别 | 技术 | 版本要求 |
+|------|------|----------|
+| 语言 | Python | >= 3.11 |
+| TUI 框架 | Textual | >= 2.1.0 |
+| LLM SDK | Anthropic | >= 0.42.0 |
+| LLM SDK | OpenAI | >= 1.60.0 |
+| 数据验证 | Pydantic | >= 2.0 |
+| 配置解析 | PyYAML | >= 6.0 |
+| HTTP 客户端 | httpx | >= 0.27.0 |
+| MCP 协议 | mcp | >= 1.12.0 |
+
+## 文档体系
+
+本项目提供完整的学习路径，包含理论讲解、源码解析、实战演练三个层次：
+
+### 理论学习篇（理解"为什么"）
+- [什么是 Coding Agent？](files/理论学习：什么是%20Coding%20Agent？.md)
+- [ReAct 范式与 Agent Loop](files/理论学习：ReAct%20范式与%20Agent%20Loop.md)
+- [Function Calling 与工具系统](files/理论学习：Function%20Calling%20与工具系统.md)
+- [五层纵深权限防御](files/理论学习：五层纵深权限防御.md)
+- [上下文压缩与 Token 管理](files/理论学习：上下文压缩与%20Token%20管理.md)
+- [多 Agent 团队协作](files/理论学习：多%20Agent%20团队协作.md)
+- [System Prompt 设计](files/理论学习：System%20Prompt%20如何设计？.md)
+
+### 源码解析篇（理解"怎么做"）
+- [Agent 主循环与事件流](files/Python源码解析：Agent%20主循环与事件流.md)
+- [工具注册与执行框架](files/Python源码解析：工具注册与执行框架.md)
+- [五层权限防御链](files/Python源码解析：五层权限防御链.md)
+- [上下文压缩与溢写](files/Python源码解析：上下文压缩与溢写.md)
+- [多 Agent 团队协作](files/Python源码解析：多%20Agent%20团队协作.md)
+- [系统提示词组装管线](files/Python源码解析：系统提示词组装管线.md)
+
+### 实战演练篇（动手实践）
+- [动手实现 Agent Loop](files/实战演练：动手实现%20Agent%20Loop.md)
+- [动手实现工具系统](files/实战演练：动手实现工具系统.md)
+- [动手实现权限系统](files/实战演练：动手实现权限系统.md)
+- [动手实现上下文管理](files/实战演练：动手实现上下文管理.md)
+- [动手实现子 Agent](files/实战演练：动手实现子%20Agent.md)
+- [动手实现 Agent Teams](files/实战演练：动手实现%20Agent%20Teams.md)
+- [动手实现 Hook 系统](files/实战演练：动手实现%20Hook%20系统.md)
+- [动手实现 Skill 系统](files/实战演练：动手实现%20Skill%20系统.md)
+- [动手接入 MCP 服务](files/实战演练：动手接入MCP服务.md)
+
+## 开发指南
+
+### 代码规范
+- **语言版本**: Python 3.11+
+- **类型标注**: PEP 604 语法（`X | Y` 而非 `Union[X, Y]`）
+- **命名风格**: snake_case（变量/函数）、PascalCase（类）、UPPER_CASE（常量）
+- **异步编程**: 全面使用 asyncio，避免同步阻塞
+
+### 运行测试
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
