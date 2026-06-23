@@ -1,9 +1,3 @@
-﻿# 来源：公众号@小林coding
-# 后端八股网站：xiaolincoding.com
-# Agent网站：xiaolinnote.com
-# 简历模版：jianli.xiaolinnote.com
-
-
 from guolaicode.permissions.checker import Decision, PermissionChecker
 from guolaicode.permissions.dangerous import DangerousCommandDetector
 from guolaicode.permissions.modes import DecisionEffect, PermissionMode, mode_decide
